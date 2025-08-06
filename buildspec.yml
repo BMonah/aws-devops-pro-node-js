@@ -1,27 +1,27 @@
 version: 0.2
 
 phases:
-  install:
-    runtime-versions:
-      nodejs: 18
-    commands:
-      - pip install --upgrade awscli
   build:
     commands:
       - echo "Zipping source..."
       - zip -r app.zip . -x "*.git*" "node_modules/*" "*.log"
-      - echo "Uploading to S3..."
-      - aws s3 cp app.zip s3://eb-deploy-bucket-bonny/app-$(date +%s).zip
-      - |
-        export S3_KEY=app-$(date +%s).zip
-        export VERSION_LABEL=ver-$(date +%s)
-        aws elasticbeanstalk create-application-version \
-          --application-name my-first-Elastic-beanstalk-webapp \
-          --version-label $VERSION_LABEL \
-          --source-bundle S3Bucket=eb-deploy-bucket-bonny,S3Key=$S3_KEY
-        aws elasticbeanstalk update-environment \
-          --environment-name My-first-Elastic-beanstalk-webap-env \
-          --version-label $VERSION_LABEL
-artifacts:
-  files:
-    - '**/*'
+      - echo "Uploading and deploying..."
+
+      - bash -c '
+          TIMESTAMP=$(date +%s)
+          S3_KEY=app-$TIMESTAMP.zip
+          VERSION_LABEL=ver-$TIMESTAMP
+
+          aws s3 cp app.zip s3://eb-deploy-bucket-bonny/$S3_KEY
+
+          echo "Creating EB Application Version..."
+          aws elasticbeanstalk create-application-version \
+            --application-name my-first-Elastic-beanstalk-webapp \
+            --version-label $VERSION_LABEL \
+            --source-bundle S3Bucket=eb-deploy-bucket-bonny,S3Key=$S3_KEY
+
+          echo "Deploying to Elastic Beanstalk..."
+          aws elasticbeanstalk update-environment \
+            --environment-name My-first-Elastic-beanstalk-webap-env \
+            --version-label $VERSION_LABEL
+        '
