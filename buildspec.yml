@@ -26,3 +26,4 @@ phases:
             --environment-name My-first-Elastic-beanstalk-webap-env \
             --version-label $VERSION_LABEL;
         '
+
